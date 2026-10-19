@@ -1,5 +1,6 @@
 import React, {useRef, useState} from 'react'
 import {Text, useInput} from 'ink'
+import {readClipboard} from '../lib/clipboard.js'
 import {stripMouseReports} from '../lib/use-mouse-click.js'
 import {useTheme} from '../theme.js'
 
@@ -135,6 +136,25 @@ export function TextInput({
     if (key.delete) {
       if (selection) return removeRange(selection[0], selection[1])
       return removeRange(cursor, key.meta ? wordRight(value, cursor) : Math.min(value.length, cursor + 1))
+    }
+
+    const pasteText = (text: string) => {
+      const clean = stripMouseReports(text).replace(/[\x00-\x1f\x7f]/g, '').trim()
+      if (!clean) return
+      const [start, end] = selection ?? [cursor, cursor]
+      const next = value.slice(0, start) + clean + value.slice(end)
+      edit(next, start + clean.length)
+      if (value === '' && submitOnPaste?.(next.trim())) onSubmit?.(next)
+    }
+
+    const isPaste =
+      input === '\x16' ||
+      (key.ctrl && (input === 'v' || input === 'V' || (key as any).name === 'v'))
+
+    if (isPaste) {
+      const clipped = readClipboard()
+      if (clipped) pasteText(clipped)
+      return
     }
 
     if (key.ctrl) {

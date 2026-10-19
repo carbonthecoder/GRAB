@@ -13,6 +13,7 @@ import {Shortcuts} from './components/shortcuts.js'
 import {TextInput} from './components/text-input.js'
 import {clickTargetAt, findFrameRow, frameRowSpan, type ClickTarget} from './lib/click-map.js'
 import {formatBytes, formatDuration, formatEta, formatSpeed, shortenPath, truncate, wrapText} from './lib/format.js'
+import {readClipboard} from './lib/clipboard.js'
 import {addToHistory, loadHistory} from './lib/history.js'
 import {detectPlatform, isProbablyUrl, type Platform} from './lib/platforms.js'
 import {useMouseClick} from './lib/use-mouse-click.js'
@@ -297,6 +298,14 @@ function AppContent({
   if (phase.name === 'done') {
     clickTargets.push({match: DONE_LABEL, padX: 4, padY: 1, action: resetToInput})
   }
+  if (phase.name === 'input') {
+    const pasteClipboard = () => {
+      const clip = (clipboardOffered && clipboardUrl ? clipboardUrl : readClipboard()).trim()
+      if (clip && isProbablyUrl(clip)) setUrlInput(clip)
+    }
+    clickTargets.push({match: 'Paste a link', padX: 4, padY: 1, action: pasteClipboard})
+    clickTargets.push({match: 'link in your clipboard', padX: 2, padY: 0, action: pasteClipboard})
+  }
   for (const [key, label] of hints) {
     const action = hintAction(key)
     if (action) clickTargets.push({match: `${key} ${label}`, action})
@@ -339,7 +348,14 @@ function AppContent({
               history={history}
               submitOnPaste={isProbablyUrl}
               onTab={() => {
-                if (clipboardOffered) setUrlInput(clipboardUrl!)
+                if (clipboardOffered && clipboardUrl) {
+                  setUrlInput(clipboardUrl)
+                  return
+                }
+                const clip = readClipboard().trim()
+                if (clip && isProbablyUrl(clip)) {
+                  setUrlInput(clip)
+                }
               }}
             />
           </FramedInput>
