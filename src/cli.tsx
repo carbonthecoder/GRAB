@@ -1,6 +1,13 @@
 import React from 'react'
 import {createRequire} from 'node:module'
+import {execSync} from 'node:child_process'
 import {render} from 'ink'
+
+if (process.platform === 'win32') {
+  try {
+    execSync('chcp 65001', {stdio: 'ignore'})
+  } catch {}
+}
 import {App, type Outcome} from './app.js'
 import {captureFrames} from './lib/click-map.js'
 import {parseArgs} from './lib/args.js'
@@ -108,5 +115,5 @@ await waitUntilExit()
 
 if (isTTY) leaveAltScreen()
 if (outcome.filepath) {
-  console.log(`✓ grabbed → ${outcome.filepath}`)
+  console.log(`+ grabbed -> ${outcome.filepath}`)
 }

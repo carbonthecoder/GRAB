@@ -30,16 +30,16 @@ import {
 } from './lib/ytdlp.js'
 
 const OUT_DIR = path.join(os.homedir(), 'Downloads')
-const DONE_LABEL = '↵ grab another'
+const DONE_LABEL = '[enter] grab another'
 const TAGLINE = 'grab any video. paste. grab. done.'
 
-const choiceLabel = (choice: DownloadChoice) => `${choice.kind === 'audio' ? '♪ ' : '▶ '}${choice.label}`
+const choiceLabel = (choice: DownloadChoice) => `${choice.kind === 'audio' ? '[audio] ' : '[video] '}${choice.label}`
 
 function ChoiceIndicator({isSelected}: IndicatorProps) {
   const theme = useTheme()
   return (
     <Box marginRight={1}>
-      <Text color={theme.primary}>{isSelected ? '❯' : ' '}</Text>
+      <Text color={theme.primary}>{isSelected ? '>' : ' '}</Text>
     </Box>
   )
 }
@@ -101,7 +101,7 @@ type Phase =
 
 const HINTS: Record<Phase['name'], Array<[string, string]>> = {
   input: [
-    ['↵', 'grab'],
+    ['enter', 'grab'],
     ['^c', 'quit'],
   ],
   probing: [
@@ -109,8 +109,8 @@ const HINTS: Record<Phase['name'], Array<[string, string]>> = {
     ['^c', 'quit'],
   ],
   picking: [
-    ['↑↓', 'choose'],
-    ['↵', 'grab'],
+    ['up/down', 'choose'],
+    ['enter', 'grab'],
     ['esc', 'back'],
     ['^c', 'quit'],
   ],
@@ -120,7 +120,7 @@ const HINTS: Record<Phase['name'], Array<[string, string]>> = {
   ],
   done: [['^c', 'quit']],
   error: [
-    ['↵', 'try again'],
+    ['enter', 'try again'],
     ['^c', 'quit'],
   ],
 }
@@ -273,7 +273,7 @@ function AppContent({
 
   let hints: Array<[string, string]> = [...HINTS[phase.name]]
   if (phase.name === 'input' && history.length > 0) {
-    hints = [hints[0]!, ['↑', 'history'], ...hints.slice(1)]
+    hints = [hints[0]!, ['up', 'history'], ...hints.slice(1)]
   }
 
   // Anything a mouse user would expect to press is clickable. Targets are
@@ -282,12 +282,12 @@ function AppContent({
   const hintAction = (key: string): (() => void) | undefined => {
     if (key === '^c') return () => exit()
     if (key === 'esc') return phase.name === 'probing' || phase.name === 'downloading' ? cancelRun : resetToInput
-    if (key === '↵') {
+    if (key === 'enter' || key === '↵') {
       if (phase.name === 'input') return () => handleUrlSubmit(urlInput)
       if (phase.name === 'picking') return () => handlePick({value: highlightRef.current})
       if (phase.name === 'error' || phase.name === 'done') return resetToInput
     }
-    return undefined // ↑↓ / ↑ stay keyboard-only
+    return undefined // up/down stay keyboard-only
   }
   const clickTargets: ClickTarget[] = []
   if (phase.name === 'picking') {
@@ -333,7 +333,7 @@ function AppContent({
       <Logo />
       <Gap />
       <Text color={theme.primary}>{TAGLINE}</Text>
-      <Text color={theme.gray} dimColor={theme.dimSecondary}>youtube · x · instagram · threads · tiktok · +1800 more</Text>
+      <Text color={theme.gray} dimColor={theme.dimSecondary}>youtube | x | instagram | threads | tiktok | +1800 more</Text>
       <Gap />
 
       {phase.name === 'input' && (
@@ -343,7 +343,7 @@ function AppContent({
               value={urlInput}
               onChange={setUrlInput}
               onSubmit={handleUrlSubmit}
-              placeholder="https://youtube.com/watch?v=…"
+              placeholder="https://youtube.com/watch?v=..."
               width={boxWidth - 6}
               history={history}
               submitOnPaste={isProbablyUrl}
@@ -360,13 +360,13 @@ function AppContent({
             />
           </FramedInput>
           {phase.warning ? (
-            <Text color={theme.gray} dimColor={theme.dimSecondary}>✗ {phase.warning}</Text>
+            <Text color={theme.gray} dimColor={theme.dimSecondary}>x {phase.warning}</Text>
           ) : clipboardOffered ? (
-            <Text color={theme.gray} dimColor={theme.dimSecondary}>link in your clipboard — ⇥ to paste it</Text>
+            <Text color={theme.gray} dimColor={theme.dimSecondary}>link in clipboard -- press [tab] to paste</Text>
           ) : clipboardAccepted ? (
-            <Text color={theme.gray} dimColor={theme.dimSecondary}>from your clipboard — ↵ to grab it</Text>
+            <Text color={theme.gray} dimColor={theme.dimSecondary}>from clipboard -- press [enter] to grab</Text>
           ) : (
-            <Text color={theme.gray} dimColor={theme.dimSecondary}>↵ to grab</Text>
+            <Text color={theme.gray} dimColor={theme.dimSecondary}>press [enter] to grab</Text>
           )}
         </Box>
       )}
