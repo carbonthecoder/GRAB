@@ -1,455 +1,223 @@
 'use client'
 
-import { useState } from 'react'
-
-const CURL_CMD = 'curl -fsSL https://raw.githubusercontent.com/carbonthecoder/GRAB/main/website/public/install.sh | bash'
-const NPM_CMD = 'npm install -g grab'
+import { useState, useEffect } from 'react'
 
 export default function Home() {
-  const [tab, setTab] = useState<'curl' | 'npm'>('curl')
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [copied, setCopied] = useState(false)
+  const [installMethod, setInstallMethod] = useState<'curl' | 'git'>('curl')
 
-  const activeCommand = tab === 'curl' ? CURL_CMD : NPM_CMD
+  useEffect(() => {
+    const current = document.documentElement.getAttribute('data-theme')
+    if (current === 'light' || current === 'dark') {
+      setTheme(current)
+    }
+  }, [])
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(activeCommand)
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    document.documentElement.setAttribute('data-theme', next)
+    try {
+      localStorage.setItem('grab-theme', next)
+    } catch {}
+  }
+
+  const curlCmd = 'curl -fsSL https://raw.githubusercontent.com/carbonthecoder/GRAB/main/website/public/install.sh | bash'
+  const gitCmd = 'git clone https://github.com/carbonthecoder/GRAB.git && cd GRAB && npm i && npm link'
+
+  const activeCmd = installMethod === 'curl' ? curlCmd : gitCmd
+
+  const copyCmd = () => {
+    navigator.clipboard.writeText(activeCmd)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <header
-        style={{
-          borderBottom: '1px solid #222222',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          maxWidth: '1100px',
-          width: '100%',
-          margin: '0 auto',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span
-            style={{
-              fontSize: '20px',
-              fontWeight: 800,
-              letterSpacing: '-0.04em',
-              color: '#ffffff',
-              fontFamily: 'var(--font-mono)',
-            }}
-          >
-            GRAB
+    <div className="container">
+      <div className="top-bar">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="theme-toggle"
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          <span className={`theme-icon ${theme === 'light' ? 'rotate-sun' : 'rotate-moon'}`}>
+            {theme === 'dark' ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            )}
           </span>
-          <span
-            style={{
-              fontSize: '11px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              background: '#111111',
-              border: '1px solid #222222',
-              color: '#888888',
-              padding: '2px 8px',
-              borderRadius: '4px',
-              fontWeight: 600,
-            }}
-          >
-            v1.0.0
+          <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
+        </button>
+      </div>
+
+      <div className="badge">
+        <span className="badge-dot"></span>
+        <span>v1.0.0 released</span>
+      </div>
+
+      <h1 className="logo">GRAB</h1>
+
+      <p className="tagline">
+        Download video and audio from YouTube, X, TikTok, and 1,800+ sites.
+        <br />
+        Paste a URL, choose a resolution or MP3, and save with zero ad redirects.
+      </p>
+
+      <div className="screenshot">
+        <div className="mockup-frame">
+          <div className="mockup-header">
+            <span className="mockup-dot" style={{ background: '#ef4444' }}></span>
+            <span className="mockup-dot" style={{ background: '#eab308' }}></span>
+            <span className="mockup-dot" style={{ background: '#22c55e' }}></span>
+            <span style={{ fontSize: '11px', color: '#666', marginLeft: '8px', fontFamily: 'monospace' }}>grab ~ terminal</span>
+          </div>
+          <div className="mockup-body">
+            <div style={{ color: '#22c55e', marginBottom: '8px' }}>$ grab https://youtube.com/watch?v=dQw4w9WgXcQ</div>
+            <div style={{ color: '#888', marginBottom: '14px' }}>⚡ Resolving streams across 1,800+ extractors...</div>
+            <div style={{ background: '#111', padding: '12px', borderRadius: '8px', border: '1px solid #222' }}>
+              <div style={{ color: '#fff', fontWeight: 'bold', marginBottom: '6px' }}>Select Format:</div>
+              <div style={{ color: '#38bdf8' }}>▶ [1] 1080p Full HD (video/mp4) · 84.2 MB</div>
+              <div style={{ color: '#aaa' }}>  [2] 720p HD (video/mp4) · 41.5 MB</div>
+              <div style={{ color: '#aaa' }}>  [3] Audio Only (audio/mp3 320kbps) · 4.8 MB</div>
+            </div>
+            <div style={{ marginTop: '12px', color: '#666', fontSize: '12px' }}>
+              Saved to ~/Downloads · Enter to download · Esc to cancel
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="tabs-section">
+        <div className="tab-pill">
+          <code>↑ / ↓</code> Select format
+        </div>
+        <div className="tab-pill">
+          <code>Enter</code> Start download
+        </div>
+        <div className="tab-pill">
+          <code>--web</code> Local player UI
+        </div>
+      </div>
+
+      <div className="install-box" onClick={copyCmd} title="Click to copy command">
+        <div className="install-header">
+          <div className="install-tabs">
+            <span className="install-label">Install</span>
+            <button
+              type="button"
+              className={`install-tab-btn ${installMethod === 'curl' ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                setInstallMethod('curl')
+              }}
+            >
+              curl
+            </button>
+            <span className="install-tab-divider">/</span>
+            <button
+              type="button"
+              className={`install-tab-btn ${installMethod === 'git' ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                setInstallMethod('git')
+              }}
+            >
+              git + npm
+            </button>
+          </div>
+          <span className={`copy-hint ${copied ? 'copied' : ''}`}>
+            {copied ? '✓ Copied' : 'Click to copy'}
           </span>
         </div>
+        <div className="install-cmd">
+          <span className="prompt">$</span>
+          {activeCmd}
+        </div>
+      </div>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <a
-            href="https://github.com/carbonthecoder/GRAB"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontSize: '14px',
-              color: '#888888',
-              transition: 'color 0.15s ease',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-            </svg>
-            GitHub
-          </a>
-        </nav>
-      </header>
-
-      {/* Main Content */}
-      <main
-        style={{
-          flex: 1,
-          maxWidth: '1100px',
-          width: '100%',
-          margin: '0 auto',
-          padding: '64px 24px 80px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '48px',
-        }}
-      >
-        {/* Hero Section */}
-        <div style={{ textAlign: 'center', maxWidth: '780px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-          <pre
-            style={{
-              fontSize: '11px',
-              lineHeight: 1.25,
-              color: '#ffffff',
-              letterSpacing: '0.04em',
-              background: '#050505',
-              padding: '16px 20px',
-              borderRadius: '8px',
-              border: '1px solid #1a1a1a',
-              display: 'inline-block',
-              maxWidth: '100%',
-              overflowX: 'auto',
-            }}
-          >{`  ░██████   ░████████      ░███    ░████████  
- ░██   ░██  ░██     ░██   ░██░██   ░██     ░██
-░██         ░██     ░██  ░██  ░██  ░██     ░██
-░██   ░████ ░████████   ░█████████ ░████████  
-░██      ░██░██   ░██   ░██    ░██ ░██     ░██
- ░██   ░██  ░██    ░██  ░██    ░██ ░██     ░██
-  ░██████   ░██     ░██ ░██    ░██ ░████████  `}</pre>
-
-          <h1
-            style={{
-              fontSize: 'clamp(28px, 5vw, 48px)',
-              fontWeight: 800,
-              letterSpacing: '-0.04em',
-              color: '#ffffff',
-              lineHeight: 1.15,
-            }}
-          >
-            Download any video or audio directly from your terminal.
-          </h1>
-
-          <p
-            style={{
-              fontSize: 'clamp(16px, 2.5vw, 19px)',
-              color: '#999999',
-              lineHeight: 1.5,
-              maxWidth: '680px',
-            }}
-          >
-            Download any video or audio from YouTube, X, TikTok, and 1,800+ sites directly from your terminal.
-          </p>
-
-          {/* Install Box */}
-          <div
-            style={{
-              width: '100%',
-              maxWidth: '640px',
-              marginTop: '12px',
-              background: '#111111',
-              border: '1px solid #222222',
-              borderRadius: '10px',
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button
-                type="button"
-                onClick={() => setTab('curl')}
-                style={{
-                  background: tab === 'curl' ? '#222222' : 'transparent',
-                  color: tab === 'curl' ? '#ffffff' : '#777777',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                curl (Standalone)
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab('npm')}
-                style={{
-                  background: tab === 'npm' ? '#222222' : 'transparent',
-                  color: tab === 'npm' ? '#ffffff' : '#777777',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                npm (Global)
-              </button>
-            </div>
-
-            {/* Command Display */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-                background: '#000000',
-                border: '1px solid #222222',
-                borderRadius: '6px',
-                padding: '12px 14px',
-              }}
-            >
-              <code
-                style={{
-                  fontSize: '13px',
-                  color: '#ededed',
-                  fontFamily: 'var(--font-mono)',
-                  overflowX: 'auto',
-                  whiteSpace: 'nowrap',
-                  flex: 1,
-                  textAlign: 'left',
-                }}
-              >
-                {activeCommand}
-              </code>
-              <button
-                type="button"
-                onClick={handleCopy}
-                style={{
-                  background: copied ? '#1e3822' : '#ededed',
-                  color: copied ? '#86efac' : '#000000',
-                  border: copied ? '1px solid #2d5a34' : 'none',
-                  borderRadius: '5px',
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {copied ? '✓ Copied' : 'Copy'}
-              </button>
-            </div>
+      <div className="features-grid">
+        <div className="feature-card">
+          <div className="feature-title">
+            <span>1,800+ Supported Sites</span>
+          </div>
+          <div className="feature-desc">
+            YouTube, X, Instagram, TikTok, Threads, Reddit, Twitch, and more via yt-dlp.
           </div>
         </div>
 
-        {/* Feature Cards Grid */}
-        <section style={{ width: '100%', marginTop: '24px' }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: '16px',
-            }}
-          >
-            {/* Card 1 */}
-            <div
-              style={{
-                background: '#111111',
-                border: '1px solid #222222',
-                borderRadius: '10px',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: '#888888',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                }}
-              >
-                Extractor
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff' }}>
-                1,800+ Sites
-              </h3>
-              <p style={{ fontSize: '14px', color: '#888888', lineHeight: 1.5 }}>
-                Supports YouTube, X, TikTok, Instagram, Threads, Reddit, Vimeo, Twitch, and thousands more through the yt-dlp backend.
-              </p>
-            </div>
-
-            {/* Card 2 */}
-            <div
-              style={{
-                background: '#111111',
-                border: '1px solid #222222',
-                borderRadius: '10px',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: '#888888',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                }}
-              >
-                Audio
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff' }}>
-                Audio Extractor (MP3)
-              </h3>
-              <p style={{ fontSize: '14px', color: '#888888', lineHeight: 1.5 }}>
-                Extract high-bitrate MP3 or original audio streams with a single keystroke. Bundled FFmpeg handles conversions automatically.
-              </p>
-            </div>
-
-            {/* Card 3 */}
-            <div
-              style={{
-                background: '#111111',
-                border: '1px solid #222222',
-                borderRadius: '10px',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: '#888888',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                }}
-              >
-                Clean
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff' }}>
-                Zero Ads / Zero Popups
-              </h3>
-              <p style={{ fontSize: '14px', color: '#888888', lineHeight: 1.5 }}>
-                No fake download buttons, no redirects, and no tracking scripts. Clean terminal execution straight to your Downloads folder.
-              </p>
-            </div>
-
-            {/* Card 4 */}
-            <div
-              style={{
-                background: '#111111',
-                border: '1px solid #222222',
-                borderRadius: '10px',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: '#888888',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                }}
-              >
-                Local UI
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff' }}>
-                Local Web Player
-              </h3>
-              <p style={{ fontSize: '14px', color: '#888888', lineHeight: 1.5 }}>
-                Launch a sleek obsidian black web interface on localhost:3000 using <code style={{ color: '#fff', background: '#000', padding: '2px 4px', borderRadius: '3px' }}>grab --web</code>.
-              </p>
-            </div>
+        <div className="feature-card">
+          <div className="feature-title">
+            <span>Audio & MP3 Extraction</span>
           </div>
-        </section>
-
-        {/* Terminal Demo Section */}
-        <section style={{ width: '100%', maxWidth: '840px' }}>
-          <div
-            style={{
-              background: '#0c0c0c',
-              border: '1px solid #222222',
-              borderRadius: '10px',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                background: '#141414',
-                padding: '12px 16px',
-                borderBottom: '1px solid #222222',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#333333' }} />
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#333333' }} />
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#333333' }} />
-              <span style={{ fontSize: '12px', color: '#666666', marginLeft: '8px', fontFamily: 'var(--font-mono)' }}>
-                bash — grab
-              </span>
-            </div>
-            <pre
-              style={{
-                padding: '20px',
-                fontSize: '13px',
-                lineHeight: 1.6,
-                color: '#ededed',
-                fontFamily: 'var(--font-mono)',
-                overflowX: 'auto',
-              }}
-            >
-              <span style={{ color: '#888888' }}>$</span> grab https://youtu.be/dQw4w9WgXcQ{'\n'}
-              <span style={{ color: '#6ee7b7' }}>▶</span> 1080p · mp4 · 42.1 MB{'\n'}
-              <span style={{ color: '#888888' }}>  720p · mp4 · 24.3 MB{'\n'}  480p · mp4 · 14.8 MB{'\n'}</span>
-              <span style={{ color: '#d8b4fe' }}>♪</span> MP3 audio · 320kbps · 3.4 MB{'\n'}
-              {'\n'}
-              <span style={{ color: '#6ee7b7' }}>✓ grabbed</span> → ~/Downloads/Rick Astley - Never Gonna Give You Up.mp4
-            </pre>
+          <div className="feature-desc">
+            Extract pure 320kbps MP3 audio tracks directly with one keystroke.
           </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer
-        style={{
-          borderTop: '1px solid #222222',
-          padding: '24px',
-          textAlign: 'center',
-          fontSize: '13px',
-          color: '#666666',
-        }}
-      >
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <span>GRAB — Created by <a href="https://github.com/carbonthecoder" target="_blank" rel="noopener noreferrer" style={{ color: '#ededed' }}>carbonthecoder</a></span>
-          <a
-            href="https://github.com/carbonthecoder/GRAB"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: '#ededed' }}
-          >
-            GitHub Repository
-          </a>
         </div>
-      </footer>
+
+        <div className="feature-card">
+          <div className="feature-title">
+            <span>Zero Popups & Zero Ads</span>
+          </div>
+          <div className="feature-desc">
+            Direct streams bypassing hostile web ad redirect networks and fake download buttons.
+          </div>
+        </div>
+
+        <div className="feature-card">
+          <div className="feature-title">
+            <span>Obsidian Local Player UI</span>
+          </div>
+          <div className="feature-desc">
+            Run grab --web to inspect metadata, preview streams, and download via localhost:3000.
+          </div>
+        </div>
+      </div>
+
+      <div className="links">
+        <a
+          href="https://github.com/carbonthecoder/GRAB"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          GitHub
+        </a>
+        <a
+          href="https://github.com/carbonthecoder/GRAB/blob/main/LICENSE"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          MIT License
+        </a>
+      </div>
+
+      <div className="footer">
+        <span>GRAB</span>
+        <span>·</span>
+        <a
+          href="https://github.com/carbonthecoder"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          carbonthecoder
+        </a>
+      </div>
     </div>
   )
 }
